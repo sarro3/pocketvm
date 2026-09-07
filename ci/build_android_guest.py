@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Builds the PocketVM Android 12 (arm64) guest image:
+Builds the PocketVM Android 9 (arm64) guest image:
 
   1. Linux 5.15.x (arm64) kernel with Android binder + ashmem built in
   2. Minimal Debian 12 rootfs (debootstrap, systemd, DHCP network)
-  3. redroid Android 12 arm64 rootfs extracted from the public Docker image
+  3. redroid Android 9 arm64 rootfs extracted from the public Docker image
      (Apache-2.0 AOSP userspace) under /android, started by a systemd unit
      inside a PID namespace (Android init as PID 1 of its own namespace)
   4. Packed as ext4 image (gzip) + kernel in a zip, published as a GitHub release
@@ -28,7 +28,7 @@ import zipfile
 WORK = "/mnt/pocketvm-guest"
 KERNEL_URL_BASE = "https://cdn.kernel.org/pub/linux/kernel/v5.x/"
 REDROID_REPO = "redroid/redroid"
-REDROID_TAG = "12.0.0-latest"
+REDROID_TAG = "9.0.0-latest"
 OUT_DIR = os.environ.get("GUEST_OUT", "out-guest")
 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
@@ -158,7 +158,7 @@ def configure_rootfs(root, kver, mods_dir):
 
     w("etc/systemd/system/android.service",
       "[Unit]\n"
-      "Description=Android 12 guest (redroid)\n"
+      "Description=Android 9 guest (redroid)\n"
       "After=local-fs.target\n"
       "\n"
       "[Service]\n"
@@ -189,6 +189,16 @@ def configure_rootfs(root, kver, mods_dir):
 
 def redroid_pull(work, root):
     android = os.path.join(root, "android")
+    # Guard against a stale cached userspace from a previous Android version
+    # (the CI cache keeps /mnt/pocketvm-guest across runs): if the extracted
+    # tree was built from a different redroid tag, wipe it and re-pull.
+    tagfile = os.path.join(android, ".redroid-tag")
+    if os.path.isfile(tagfile):
+        with open(tagfile) as f:
+            cached_tag = f.read().strip()
+        if cached_tag != REDROID_TAG:
+            print(f"stale redroid userspace ({cached_tag}) — wiping for {REDROID_TAG}", flush=True)
+            shutil.rmtree(android, ignore_errors=True)
     if os.path.isdir(os.path.join(android, "system")):
         print("redroid already extracted")
         return
@@ -224,6 +234,8 @@ def redroid_pull(work, root):
             print(f"layer {i}/{total}: {d[:19]}…", flush=True)
             http_get(f"https://registry-1.docker.io/v2/{REDROID_REPO}/blobs/{d}", dest=blob, headers=H)
         extract_layer(blob, android)
+    with open(os.path.join(android, ".redroid-tag"), "w") as f:
+        f.write(REDROID_TAG + "\n")
     print("redroid rootfs ready")
 
 
@@ -273,13 +285,13 @@ def pack(work, kver, image):
     with open(img, "rb") as src, gzip.GzipFile(gz_path, "wb", compresslevel=6) as dst:
         shutil.copyfileobj(src, dst, length=1 << 20)
 
-    zip_path = os.path.join(OUT_DIR, f"pocketvm-android12-arm64-v{os.environ.get('GITHUB_RUN_NUMBER', '0')}.zip")
+    zip_path = os.path.join(OUT_DIR, f"pocketvm-android9-arm64-v{os.environ.get('GITHUB_RUN_NUMBER', '0')}.zip")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_STORED) as z:
         z.write(gz_path, "rootfs.img.gz")
         z.write(image, "vmlinuz")
         z.writestr("manifest.json", json.dumps({
-            "name": "PocketVM Android 12 guest (arm64)",
-            "android": "12 (redroid userspace)",
+            "name": "PocketVM Android 9 guest (arm64)",
+            "android": "9 (redroid userspace)",
             "kernel": kver,
             "created": time.strftime("%Y-%m-%d"),
         }, indent=2))
@@ -296,12 +308,12 @@ def publish(zip_path):
     H = {"Authorization": f"Bearer {GITHUB_TOKEN}",
          "Accept": "application/vnd.github+json",
          "User-Agent": "pocketvm-ci"}
-    tag = f"android12-v{os.environ.get('GITHUB_RUN_NUMBER', '0')}"
+    tag = f"android9-v{os.environ.get('GITHUB_RUN_NUMBER', '0')}"
     body = json.dumps({
         "tag_name": tag,
-        "name": f"Android 12 guest image ({tag})",
-        "body": "Prebuilt Android 12 (redroid) arm64 guest for PocketVM: rootfs.ext4 (gz) + Linux kernel. "
-                "Import from the app: New VM → Download Android 12 guest image.",
+        "name": f"Android 9 guest image ({tag})",
+        "body": "Prebuilt Android 9 (redroid) arm64 guest for PocketVM: rootfs.ext4 (gz) + Linux kernel. "
+                "Import from the app: New VM → Download Android 9 guest image.",
         "prerelease": False,
     }).encode()
     req = urllib.request.Request(f"{api}/releases", data=body, headers=H, method="POST")

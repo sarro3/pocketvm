@@ -30,7 +30,7 @@ class VmRepository(context: Context) {
     val imagesRoot: File
         get() = File(appContext.getExternalFilesDir(null) ?: appContext.filesDir, "images")
 
-    fun sharedAndroidDir(): File = File(imagesRoot, "android12").apply { mkdirs() }
+    fun sharedAndroidDir(): File = File(imagesRoot, "android9").apply { mkdirs() }
 
     fun sharedAndroidBase(): File = File(sharedAndroidDir(), "rootfs.img")
 

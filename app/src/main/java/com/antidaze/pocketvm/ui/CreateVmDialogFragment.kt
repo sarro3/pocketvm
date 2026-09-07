@@ -56,7 +56,7 @@ class CreateVmDialogFragment : DialogFragment() {
 
         source.setOnCheckedChangeListener { _, checked ->
             syncPickVisibility(source, pick)
-            // Android 12 guests need at least 2 GB to run system_server.
+            // Android 9 guests need at least 2 GB to run system_server.
             if (checked == R.id.src_android) ram.setSelection(2)
         }
         pick.setOnClickListener {
@@ -131,7 +131,7 @@ class CreateVmDialogFragment : DialogFragment() {
                         repo.saveConfig(cfg)
                     }
                     R.id.src_download -> enqueueDownload(dlg, cfg, DownloadService.KIND_ISO, TEST_ISO_URL, "Alpine Linux ISO", ctx)
-                    R.id.src_android -> enqueueDownload(dlg, cfg, DownloadService.KIND_ANDROID, "", "Android 12 image", ctx)
+                    R.id.src_android -> enqueueDownload(dlg, cfg, DownloadService.KIND_ANDROID, "", "Android 9 image", ctx)
                 }
                 if (mode != R.id.src_import) {
                     withContext(Dispatchers.Main) {

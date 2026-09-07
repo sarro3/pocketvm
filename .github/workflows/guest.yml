@@ -1,4 +1,4 @@
-name: Build Android 12 guest image
+name: Build Android 9 guest image
 
 on:
   workflow_dispatch:
@@ -35,10 +35,15 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: /mnt/pocketvm-guest
-          key: guest-kernel-${{ github.sha }}
-          restore-keys: guest-kernel-
+          key: guest-android9-${{ github.sha }}
+          # Prefer an Android 9 cache; fall back to the older Android 12 cache
+          # (kernel + Debian rootfs are reusable — the build script wipes the
+          # stale redroid 12 userspace when the tag no longer matches).
+          restore-keys: |
+            guest-android9-
+            guest-kernel-
 
-      - name: Build Android 12 guest image
+      - name: Build Android 9 guest image
         run: |
           set -o pipefail
           sudo -E GITHUB_TOKEN="$GITHUB_TOKEN" GITHUB_REPOSITORY="$GITHUB_REPOSITORY" \
@@ -57,26 +62,26 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: /mnt/pocketvm-guest
-          key: guest-kernel-${{ github.sha }}
+          key: guest-android9-${{ github.sha }}
 
       - name: Publish release asset
         if: success()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="android12-v${{ github.run_number }}"
+          TAG="android9-v${{ github.run_number }}"
           ZIP=$(ls out-guest/*.zip | head -1)
-          cp "$ZIP" out-guest/pocketvm-android12-arm64.zip
-          echo "publishing out-guest/pocketvm-android12-arm64.zip as $TAG"
-          gh release create "$TAG" out-guest/pocketvm-android12-arm64.zip \
-            --title "Android 12 guest image (v${{ github.run_number }})" \
-            --notes "Prebuilt Android 12 (redroid) arm64 guest for PocketVM: rootfs.ext4 (gz) + Linux kernel. Import from the app: New VM → Download Android 12 guest image." \
-            || gh release upload "$TAG" out-guest/pocketvm-android12-arm64.zip --clobber
+          cp "$ZIP" out-guest/pocketvm-android9-arm64.zip
+          echo "publishing out-guest/pocketvm-android9-arm64.zip as $TAG"
+          gh release create "$TAG" out-guest/pocketvm-android9-arm64.zip \
+            --title "Android 9 guest image (v${{ github.run_number }})" \
+            --notes "Prebuilt Android 9 (redroid) arm64 guest for PocketVM: rootfs.ext4 (gz) + Linux kernel. Import from the app: New VM → Download Android 9 guest image." \
+            || gh release upload "$TAG" out-guest/pocketvm-android9-arm64.zip --clobber
 
       - name: Publish build link to ci-latest-guest branch
         if: always()
         run: |
-          { echo "guest_release=https://github.com/${{ github.repository }}/releases/tag/android12-v${{ github.run_number }}";
+          { echo "guest_release=https://github.com/${{ github.repository }}/releases/tag/android9-v${{ github.run_number }}";
             echo "asset=$(ls out-guest/*.zip 2>/dev/null | head -1)";
             echo "built=$(date -u +%Y-%m-%dT%H:%M:%SZ)"; } > guestlink.txt
           git config user.email "ci@pocketvm.local"

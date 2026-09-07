@@ -7,19 +7,23 @@ import java.net.URL
 import java.util.zip.GZIPInputStream
 import java.util.zip.ZipInputStream
 
-/** Finds and downloads the prebuilt Android 12 guest image from GitHub releases. */
+/** Finds and downloads the prebuilt Android 9 guest image from GitHub releases. */
 object GuestImages {
 
-    const val REPO = "novaxmyth/pocketvm"
-    const val ASSET_PREFIX = "pocketvm-android12"
+    const val REPO = "sarro3/pocketvm"
+    const val ASSET_PREFIX = "pocketvm-android9"
 
     /** Fixed-name asset URL — uses github.com redirects, never the api.github.com host. */
     const val FIXED_ASSET_URL =
-        "https://github.com/$REPO/releases/latest/download/pocketvm-android12-arm64.zip"
+        "https://github.com/$REPO/releases/latest/download/pocketvm-android9-arm64.zip"
 
-    /** Known-good pinned image (first fully published bundle). */
+    /**
+     * Known-good pinned image (first published android9 bundle from this
+     * fork's CI). 404s until the guest workflow has run at least once — the
+     * fixed-name URL above is the primary candidate.
+     */
     const val PINNED_ASSET_URL =
-        "https://github.com/$REPO/releases/download/android12-v6/pocketvm-android12-arm64-v6.zip"
+        "https://github.com/$REPO/releases/download/android9-v1/pocketvm-android9-arm64-v1.zip"
 
     private val CANDIDATE_URLS = listOf(FIXED_ASSET_URL, PINNED_ASSET_URL)
 
