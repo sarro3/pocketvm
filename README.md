@@ -44,9 +44,9 @@ open-source stack for this:
 
 What works today:
 
-- **Android 12 guest (arm64)**: CI builds a real Android 12 guest image — a
+- **Android 9 guest (arm64)**: CI builds a real Android 9 guest image — a
   Debian 12 rootfs with a binder-enabled Linux 5.15 kernel plus the redroid
-  Android 12 (AOSP, Apache-2.0) arm64 userspace, started as a PID-namespaced
+  Android 9 (AOSP, Apache-2.0) arm64 userspace, started as a PID-namespaced
   init. The app downloads the bundle from GitHub releases, boots it under
   QEMU (TCG), reaches the guest's adb over slirp port-forwarding, and streams
   the Android UI via the scrcpy protocol (H.264 → MediaCodec) with touch and

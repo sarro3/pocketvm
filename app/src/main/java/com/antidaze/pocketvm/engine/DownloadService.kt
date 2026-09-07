@@ -204,7 +204,7 @@ class DownloadService : Service() {
                 if (!cfg.preparing) continue
                 val kind = cfg.pendingKind.ifEmpty {
                     // Old jobs without a recorded kind: guess from what's on disk.
-                    if (File(repo.imagesRoot, "android12").exists()) KIND_ANDROID else KIND_ISO
+                    if (File(repo.imagesRoot, "android9").exists()) KIND_ANDROID else KIND_ISO
                 }
                 start(context, cfg.id, kind, cfg.pendingUrl, cfg.name)
             }
